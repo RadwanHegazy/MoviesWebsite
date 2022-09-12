@@ -1,0 +1,324 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" href="{% static 'icon.png' %}" >
+    <title>كوكب الافلام</title>
+</head>
+<body>
+
+
+
+
+    <div class="overlay">
+        <p class="elForText"></p>
+    </div>
+
+
+    <div class="search">
+        <div class="in">
+            <input type="text" placeholder="اكتب اسم الفيلم">
+            <button > <i class="fa fa-search"></i> بحث</button>
+        </div>
+        <i class="fa fa-close" id="search"></i>
+    </div>
+
+    <div class="type" >
+        <i class="fa fa-close" id="type"></i>
+        <span>
+            <input type="submit" class="active" name="type" value="الكل">
+        </span>
+    </div>
+
+    <!-- start settings -->
+    <div class="settings">
+        <i class="fa fa-cog"></i>
+        <div class="options">
+            <button id="search">بحث</button>
+            <button id="type">النوع</button>
+        </div>
+    </div>
+    <!-- end settings -->
+
+
+    <div class="dev">
+        <p>بكل فخر تم تصميم وبناء الموقع بواسطة</p>
+        <a href="https://dev-radwan.xyz/en/" target="_blank">رضوان جابر حجازي</a>
+    </div>
+
+    <!-- film container -->
+    <div class="films">
+        
+
+        
+
+
+    </div>
+    <!-- end film container -->
+
+
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/typed.js' %}"></script>
+
+    <script>
+
+               
+        var typed = new Typed('.elForText',{
+            strings:[
+            ' صلي علي محمد ',
+            'لا تجعل الافلام تلهيك عن صلاتك',
+            'تفضل بالدخول',
+            ],
+            typeSpeed: 60,
+            backSpeed: 60,
+            loop:false,
+        })
+        
+
+        setTimeout(()=>{
+            document.querySelector('.overlay').classList.add('remove')
+        },12000)
+
+
+
+        var load = `    <div class="load">
+            <div class="loading"></div>
+        </div>
+    `;
+    var blob =  `<div class='blob'></div>`;
+ 
+
+        // view all films
+       function ViewAllMovies (){
+        $.ajax({
+            type:'GET',
+            url:'{% url "films" %}',
+            success:function(films){
+                //document.querySelector('.film').innerHTML += `<div class="blob"></div>`;
+                //$('.films').empty()
+                for (var i =0;i<films.length;i++) {
+                    var content = `
+                    <a href="f/${films[i]['id']}" class="film">
+                        <img src="${films[i]['image']}" alt="">
+                        <div class="name">
+                            <p>${films[i]['name']}</p>
+                        </div>
+                    </a>
+
+                    `;
+                document.querySelector('.films').innerHTML += content;
+            }
+            document.querySelector('.films').innerHTML += blob;
+            },error:function(error) {
+                console.log('error', error)
+            }
+        })
+       }
+
+       ViewAllMovies();
+
+
+
+        // search 
+        document.querySelector('.search .in button').addEventListener('click',function(){
+            var key = document.querySelector('.search .in input').value;
+            
+            document.querySelector('.search').classList.remove('view');
+
+            $.ajax({
+                type:"GET",
+                url:"{% url 'home' %}",
+                data:{
+                    'key':key
+                },
+                success:function(films){
+                   if (films.length != 0) {
+                    $('.films').empty()
+                    document.querySelector('.films').innerHTML += blob;
+                    document.querySelector('.films').innerHTML += `<h1 class='results'>نتائج البحث</h1>`;
+
+                        for (var i =0;i<films.length;i++) {
+                            var content = `
+                            
+                            <a href="f/${films[i]['id']}" class="film">
+                                
+                                <img src="${films[i]['image']}" alt="">
+                                <div class="name">
+                                    <p>${films[i]['name']}</p>
+                                </div>
+                            </a>
+
+                            `;
+                        document.querySelector('.films').innerHTML += content;
+                   }
+                   document.querySelector('.films').innerHTML += `<div class='all'></div>`;
+                   ViewAllMovies()
+                }else {
+                    alert('سوف يتم اضافة هذا الفيلم قريبا')
+                   }
+                },error:function(error){
+                    console.log(error)
+                }
+            })
+
+        })
+        
+
+        // handle categories
+        $.ajax({
+            type:'GET',
+            url:'{% url "catg" %}',
+            success:function(catgs){
+                for (var i =0;i<catgs.length;i++){
+                    var content = `<input type="submit"  name="type" value="${catgs[i]['name']}">`
+                    document.querySelector('.type span').innerHTML += content;
+                }
+
+                // get films by categories
+                document.querySelectorAll('.type span input').forEach(item =>{
+                    
+                    item.addEventListener('click',()=>{
+                        document.querySelectorAll('.type span input').forEach(items =>{
+                            items.classList.remove('active')
+                        })
+                        var type = item.value;
+                        item.classList.add('active')
+                        
+                        
+                        $('.films').empty()
+                        if (type == 'الكل'){
+                            ViewAllMovies()    
+                        }else {
+                            $.ajax({
+                                type:"GET",
+                                url:"{% url 'gbc' %}",
+                                data:{
+                                    'type':type,
+                                    'page':1,
+                                },success:function(films){
+                                    document.querySelector('.films').innerHTML += blob;
+                                    for (var i =0;i<films.length;i++) {
+                                        var content = `
+                                        
+                                        <a href="f/${films[i]['id']}" class="film">
+                                            <img src="${films[i]['image']}" alt="">
+                                            <div class="name">
+                                                <p>${films[i]['name']}</p>
+                                            </div>
+                                        </a>
+            
+                                        `;
+                                    document.querySelector('.films').innerHTML += content;
+                                    }
+                                    document.querySelector('.load').remove()
+                                }
+                            })
+                        }
+
+                        document.querySelector('.type').classList.remove('view')
+
+                    })
+                })
+
+            }
+        })
+
+
+        // pagination here
+       var current_page = 0;
+        window.onscroll = function(ev){
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+                current_page++
+                
+                
+                
+                
+                var load = `
+                <div class="load">
+                    <div class="loading"></div>
+                </div>`;
+
+                
+                
+                if (document.querySelector('.load') == null){
+
+                    document.querySelectorAll('.type span input').forEach(item =>{
+                        if (item.className == 'active'){
+                            if (item.value == 'الكل'){
+                                document.querySelector('.films').innerHTML += load;
+
+                    $.ajax({
+                        type:'GET',
+                        url:'{% url "films" %}',
+                        data:{
+                            'page':current_page
+                        },
+                        success:function(films){
+                            //$('.films').empty()
+                            for (var i =0;i<films.length;i++) {
+                                var content = `
+                                <a href="f/${films[i]['id']}" class="film">
+                                    <img src="${films[i]['image']}" alt="">
+                                    <div class="name">
+                                        <p>${films[i]['name']}</p>
+                                    </div>
+                                </a>
+                                
+                                `;
+                                document.querySelector('.films').innerHTML += content;
+                               
+                            }
+                            document.querySelector('.films').innerHTML += blob;
+                            document.querySelector('.load').remove()
+                        },error:function(error) {
+                            console.log('error', error)
+                        }
+                    })
+                            }else {
+                                var val = item.value;
+                                $.ajax({
+                                    type:"GET",
+                                    url:"{% url 'gbc' %}",
+                                    data:{
+                                        'type':val,
+                                        'page':current_page,
+                                    },success:function(films){
+                                        document.querySelector('.films').innerHTML += blob;
+                                        document.querySelector('.films').innerHTML += load;
+                                        for (var i =0;i<films.length;i++) {
+                                            var content = `
+                                            
+                                            <a href="f/${films[i]['id']}" class="film">
+                                                <img src="${films[i]['image']}" alt="">
+                                                <div class="name">
+                                                    <p>${films[i]['name']}</p>
+                                                </div>
+                                            </a>
+                
+                                            `;
+                                        document.querySelector('.films').innerHTML += content;
+                                        }
+                                        document.querySelector('.load').remove()
+                                    }
+                                })
+                            }
+                            
+                        }
+                    })
+
+                    
+                }
+
+
+            }
+        }
+    </script>
+</body>
+</html>

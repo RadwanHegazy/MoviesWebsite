@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/watch_film.css' %}">
+    <link rel="icon" href="{% static 'icon.png' %}">
+    <title>{{info.name}}</title>
+</head>
+<body>
+    
+
+    <div class="blob"></div>
+
+
+    <div class="name"><p>{{info.name}}</p></div>
+    <div class="vid">
+        <video controls>
+            <source src="{{url}}">
+        </video>
+        <a href="{{url}}}">تنزيل الفيلم</a>
+    </div>
+    <div class="des"><p>{{info.des}}</p></div>
+
+    <div class="suggest">
+        <h1>افلام مقترحة</h1>
+        <div class="slider">
+
+            {% for film in films %}
+                <a href="{% url 'watch_film' film.id %}">
+                    <img src="{{film.image}}" alt="">
+                    <div class="text">{{film.name}}</div>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
